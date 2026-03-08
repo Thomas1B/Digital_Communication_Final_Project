@@ -36,12 +36,11 @@ adjusts an led's brightness accordingly.
 #define datalength 7    // Size of the data array being transmitted
 #define delayTime 2000  // delay time (milliseconds) between transmissions, stops spamming of messages.
 
-float data[1] = { 0 };          // Data array that will be transmitted over RF
-float pot_value = 0;            // potentiometer value.
+uint8_t data[2] = { 0, 0 };     // Data array that will be transmitted over RF
 unsigned int lastTransmit = 0;  // last time data was transmitted.
 
 // ****** Declaring Functions *******
-int get_datalength();
+uint8_t get_datalength();
 
 // ****** Setup Function *******
 void setup() {
@@ -86,7 +85,7 @@ void setup() {
 // ****** Main Loop *******
 void loop() {
 
-  pot_value = analogRead(pot) * (5.0 / 1023.0);  // reading pot and converting to a voltage.
+  uint16_t pot_value = analogRead(pot);
 
   unsigned int now = millis();
 
@@ -96,9 +95,14 @@ void loop() {
     // turn green off to show button pressed.
     digitalWrite(GREEN_LED, LOW);
 
-    data[0] = round(pot_value * 100.0) / 100.0;  // updating data with pot value (rounded to 2 decimals)
-    // man.transmitArray(get_datalength(), data);  // transmitting data
-    printf("Data transmitted: %0.2f\n", data[0]);
+    data[0] = lowByte(pot_value); // splitting 16-bit number into 2 8-bit number
+    data[1] = highByte(pot_value);
+
+    man.transmitArray(get_datalength(), data);  // transmitting data
+    uint16_t test = data[0] | (data[1] << 8);
+    printf("Data length: %d\n", get_datalength());
+    printf("Data transmitted: %d\n", data[0]);
+    printf("Data transmitted: %d\n", data[1]);
 
     // Blink the Blue LED 5 times to indicate data was transmitted
     for (int i = 0; i < 5; i++) {
@@ -118,6 +122,6 @@ void loop() {
 
 
 // ****** Declaring Functions *******
-int get_datalength() {
+uint8_t get_datalength() {
   return sizeof(data) / sizeof(data[0]);
 }
