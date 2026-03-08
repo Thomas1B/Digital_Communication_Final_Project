@@ -1,3 +1,4 @@
+#include <LibPrintf.h>
 #include <manchester.h>
 
 /*
@@ -20,42 +21,40 @@
 
 */
 
-#define RX_PIN 11
-#define LED_PIN 13
+#define RX_PIN 2    // pin connected to receiver
+#define LED_PIN A7  // analog pin connected to LED
 
-
-#define BUFFER_SIZE 7
+#define BUFFER_SIZE 1
 uint8_t buffer[BUFFER_SIZE];
-uint8_t Rx_num=0;
+uint8_t Rx_num = 0;
 
 void setup() {
-  pinMode(LED_PIN, OUTPUT); 
-  Serial.begin(1200); 
+  pinMode(LED_PIN, OUTPUT);
+  Serial.begin(1200);
   digitalWrite(LED_PIN, 0);
-  man.setupReceive(RX_PIN, MAN_300 );
+  man.setupReceive(RX_PIN, MAN_300);
   man.beginReceiveArray(BUFFER_SIZE, buffer);
-
-
 }
 
 void loop() {
-	
-	
+
+
   if (man.receiveComplete()) {
-	  
-	  Rx_num++;
-	  Serial.println("Received... message # ");
-	  Serial.print(Rx_num);
-	  digitalWrite(LED_PIN, 1);
-	  
+    printf("Tranmisson Received!\n");
+
+    Rx_num++;
+    printf("Received... message # \n");
+    printf(Rx_num);
+    digitalWrite(LED_PIN, 1);
+
 
     man.beginReceiveArray(BUFFER_SIZE, buffer);
-    for(int i=0; i<BUFFER_SIZE; i++){
-        Serial.print(char(buffer[i]));
+    for (int i = 0; i < BUFFER_SIZE; i++) {
+      printf(char(buffer[i]));
     }
-    Serial.println();
+    printf('\n');
   }
   delay(500);
   digitalWrite(LED_PIN, 0);
-  Serial.println("end");
+  printf("end of received tranmission.\n");
 }
