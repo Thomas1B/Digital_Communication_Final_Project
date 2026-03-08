@@ -1,10 +1,20 @@
-#include "manchester.h"
+#include <LibPrintf.h>
+#include "manchester.h"  // Include Manchester encoding library used for RF transmission
 
+/*
+ECET 251 Final Project
+
+Transmitter
+
+This transmitter reads a pot a value and converts it to a voltage, when a button is pressed
+the pot value is transmitted using a 433MHz RF module. The receiver reads the data and then 
+adjusts an led's brightness accordingly.
+*/
 
 /*
   Manchester Transmitter example
 
-  In this example transmitter will send 10 bytes array  per transmittion
+  In this example transmitter will send 10 bytes array per transmission
   try different speeds using this constants, your maximum possible speed will
   depend on various factors like transmitter type, distance, microcontroller speed, ...
   MAN_300 0
@@ -17,58 +27,97 @@
   MAN_38400 7
 */
 
-#define TX_PIN  11          //pin where your transmitter is connected
-#define GRN_LED  4          //pin for Green LED
-#define YLO_LED  5          //pin for Yellow LED
-#define datalength   7      //this is size of array
-#define button  10          //pin where your active-low button is connected
+#define TX_PIN 2     // Pin where the RF transmitter data pin is connected
+#define GREEN_LED 4  // Pin connected to the Green LED (indicates system ready)
+#define BLUE_LED 5   // Pin connected to the Yellow LED (indicates transmission)
+#define button 3     // Pin where the active-HIGH pushbutton is connected
+#define pot A7       // Pin where potentiometer is connected.
+
+#define datalength 7    // Size of the data array being transmitted
+#define delayTime 2000  // delay time (milliseconds) between transmissions, stops spamming of messages.
+
+float data[1] = { 0 };          // Data array that will be transmitted over RF
+float pot_value = 0;            // potentiometer value.
+unsigned int lastTransmit = 0;  // last time data was transmitted.
+
+// ****** Declaring Functions *******
+int get_datalength();
+
+// ****** Setup Function *******
+void setup() {
+  printf("Starting Setup\n");
+
+  // Configure button pin as input
+  pinMode(button, INPUT);
+  // Configure pot pin as input
+  pinMode(pot, INPUT);
+
+  // Configure Green LED pin as an output
+  pinMode(GREEN_LED, OUTPUT);
+  digitalWrite(GREEN_LED, LOW);  // Start with LED off
+
+  // Configure BLUE LED pin as an output
+  pinMode(BLUE_LED, OUTPUT);
+  digitalWrite(BLUE_LED, LOW);  // Start with LED off
 
 
-uint8_t data[7] = {7, 'G', 'O', 'J', 'A', 'Y', 'S'};  // array of data to transmit
-
-void setup()
-{
-  pinMode(GRN_LED , OUTPUT);
-  digitalWrite(GRN_LED, LOW);
-  pinMode(YLO_LED , OUTPUT);
-  digitalWrite(YLO_LED, LOW);
-
-
-  for (byte i = 0; i < 5; i++)
-  {
-    digitalWrite(5, HIGH);
-    digitalWrite(4, HIGH);
-    delay(25);
-    digitalWrite(5, LOW);
-    digitalWrite(4, LOW);
-
+  // Flash both LEDs 5 times at startup as a power-up indicator
+  for (byte i = 0; i < 5; i++) {
+    digitalWrite(BLUE_LED, HIGH);
+    digitalWrite(GREEN_LED, LOW);
+    delay(100);
+    digitalWrite(GREEN_LED, HIGH);
+    digitalWrite(BLUE_LED, LOW);
+    delay(100);
   }
+  // Required workaround if using 1 MHz ATtiny chips
+  //man.workAround1MhzTinyCore();
 
-
-  //man.workAround1MhzTinyCore(); //add this in order for transmitter to work with 1Mhz Attiny85/84
+  // Initialize Manchester transmitter
+  // TX_PIN = transmitter data pin
+  // MAN_300 = transmission speed (300 baud Manchester encoded)
   man.setupTransmit(TX_PIN, MAN_300);
 
+  Serial.begin(9600);
+  printf("Setup Done\n");
+  printf("Main Loop now running:\n");
+}
 
+// ****** Main Loop *******
+void loop() {
+
+  pot_value = analogRead(pot) * (5.0 / 1023.0);  // reading pot and converting to a voltage.
+
+  unsigned int now = millis();
+
+  // If button has been pressed AND the allocated time has passed.
+  // This is to stop spamming of button presses.
+  if (digitalRead(button) && now - lastTransmit >= delayTime) {
+    // turn green off to show button pressed.
+    digitalWrite(GREEN_LED, LOW);
+
+    data[0] = round(pot_value * 100.0) / 100.0;  // updating data with pot value (rounded to 2 decimals)
+    // man.transmitArray(get_datalength(), data);  // transmitting data
+    printf("Data transmitted: %0.2f\n", data[0]);
+
+    // Blink the Blue LED 5 times to indicate data was transmitted
+    for (int i = 0; i < 5; i++) {
+      digitalWrite(BLUE_LED, 1);
+      delay(100);
+      digitalWrite(BLUE_LED, 0);
+      delay(100);
+    }
+    lastTransmit = now;  // updating last transmission time.
+  }
+
+  // if allocated time has passed, turn green led on to indicate another transmission can be sent.
+  else if (now - lastTransmit >= delayTime) {
+    digitalWrite(GREEN_LED, HIGH);
+  }
 }
 
 
-
-void loop()
-{
-  delay(800);
-  while (digitalRead(10) == 1)		// do nothing while no button pressed
-  {
-
-    digitalWrite(GRN_LED, 1);      // GREEN LED on = system is ready to transmit
-  }
-
-  digitalWrite(GRN_LED, 0);    // GREEN LED off
-
-  man.transmitArray(datalength, data);
-  for (int i = 0; i < 5; i++)
-  { digitalWrite(YLO_LED, 1);
-    delay(150);
-    digitalWrite(YLO_LED, 0);
-  }
-  delay(800);
+// ****** Declaring Functions *******
+int get_datalength() {
+  return sizeof(data) / sizeof(data[0]);
 }
