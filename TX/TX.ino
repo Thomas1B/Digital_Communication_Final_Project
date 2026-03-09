@@ -99,7 +99,6 @@ void loop() {
     data[1] = highByte(pot_value);
 
     man.transmitArray(get_datalength(), data);  // transmitting data
-    uint16_t test = data[0] | (data[1] << 8);
     printf("Data length: %d\n", get_datalength());
     printf("Data transmitted: %d\n", data[0]);
     printf("Data transmitted: %d\n", data[1]);
