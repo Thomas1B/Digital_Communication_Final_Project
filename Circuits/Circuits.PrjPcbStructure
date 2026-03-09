@@ -1,1 +1,2 @@
-Record=TopLevelDocument|FileName=transmitter.SchDoc|SheetNumber=1
+Record=TopLevelDocument|FileName=receiver.SchDoc|SheetNumber=2
+Record=NoMainPathDocument|SourceDocument=receiver.SchDoc|FileName=transmitter.SchDoc|SheetNumber=1
