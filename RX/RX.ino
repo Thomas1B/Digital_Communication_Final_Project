@@ -21,26 +21,28 @@
 
 */
 
-#define RX_PIN 2    // pin connected to receiver
-#define LED_PIN A7  // analog pin connected to LED
-#define GREEN_LED 3
+#define RX_PIN 2     // pin connected to receiver
+#define GREEN_LED 4  // GREEN LED for system status
+#define LED_PIN 5    // PWM pin connected to LED (for controlling brightness)
 
 #define BUFFER_SIZE 2
 uint8_t buffer[BUFFER_SIZE];
 uint8_t Rx_num = 0;
 
+// ******* Declaring Function *******
+void ledController();
 
 // ******* Setup Function *******
 void setup() {
   Serial.begin(1200);
   printf("Setup Started\n");
-  pinMode(LED_PIN, OUTPUT);
   pinMode(GREEN_LED, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
 
-  digitalWrite(LED_PIN, 0);
   man.setupReceive(RX_PIN, MAN_300);
   man.beginReceiveArray(BUFFER_SIZE, buffer);
 
+  analogWrite(LED_PIN, 0);
   digitalWrite(GREEN_LED, HIGH);
   printf("Setup Finished\n");
   printf("Main Loop now running\n");
@@ -48,22 +50,53 @@ void setup() {
 
 // ******* Main Loop *******
 void loop() {
-
   if (man.receiveComplete()) {
-    printf("Tranmisson Received!\n");
     Rx_num++;
-    printf("Received... message # \n");
-    printf(Rx_num);
-    analogWrite(LED_PIN, 255);
+    printf("Tranmisson Received!\n");
+    printf("Message #%d:\n", Rx_num);
+    digitalWrite(GREEN_LED, LOW);
 
-    // printf(buffer[0]);
-    for (int i = 0; i < BUFFER_SIZE; i++) {
-      printf("%u", buffer[i]);
-    }
-    printf('\n');
-    delay(500);
-    analogWrite(LED_PIN, 0);
     man.beginReceiveArray(BUFFER_SIZE, buffer);
-    printf("end of received tranmission.\n");
+    for (int i = 0; i < BUFFER_SIZE; i++) {
+      printf("Buffer index: %d -> %u\n", i, buffer[i]);
+    }
+    printf("end of tranmission.\n");
+    ledController();
+    delay(500);
+    digitalWrite(GREEN_LED, HIGH);
   }
+}
+
+// ******* Defining Functions *******
+void ledController() {
+  /*
+  This function reconstructs the original 16-bit potentiometer value
+  that was transmitted as two 8-bit bytes, and controls an leds bright accordingly.
+
+  During transmission the 16-bit pot value was split into two parts:
+      data[0] → low byte  (bits 0–7)
+      data[1] → high byte (bits 8–15)
+
+  These bytes were sent over RF and stored in the receiver buffer.
+
+  To rebuild the original number:
+      1. The high byte is shifted left by 8 bits to move it back into
+         the upper half of the 16-bit value.
+      2. The low byte is combined with the shifted high byte using
+         a bitwise OR operation.
+
+  buffer[0] = low byte
+  buffer[1] = high byte
+
+  This reconstructs the original potentiometer reading so it can be
+  used to control the LED brightness.
+  */
+
+  uint16_t pot_value = buffer[0] | (buffer[1] << 8);         // recombining 2 8-bits bytes.
+  uint8_t scaledPotValue = map(pot_value, 0, 1023, 0, 255);  // scaling for PWM.
+
+  printf("Pot Value = %d\n", pot_value);  // optional messages
+  printf("Scaled Pot Value = %d\n", scaledPotValue);
+
+  analogWrite(LED_PIN, scaledPotValue);
 }
