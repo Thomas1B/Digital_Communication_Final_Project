@@ -27,7 +27,7 @@ adjusts an led's brightness accordingly.
   MAN_38400 7
 */
 
-#define TX_PIN 2     // Pin where the RF transmitter data pin is connected
+#define TX_PIN 9     // Pin where the RF transmitter data pin is connected
 #define GREEN_LED 4  // Pin connected to the Green LED (indicates system ready)
 #define BLUE_LED 5   // Pin connected to the Yellow LED (indicates transmission)
 #define button 3     // Pin where the active-HIGH pushbutton is connected
