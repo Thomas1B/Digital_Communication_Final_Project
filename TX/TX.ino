@@ -35,8 +35,9 @@ adjusts an led's brightness accordingly.
 
 #define datalength 7    // Size of the data array being transmitted
 #define delayTime 2000  // delay time (milliseconds) between transmissions, stops spamming of messages.
+int count = 0;
 
-uint8_t data[2] = { 0, 0 };     // Data array that will be transmitted over RF
+uint8_t data[3] = { 0, 0, 0 };  // Data array that will be transmitted over RF
 unsigned int lastTransmit = 0;  // last time data was transmitted.
 
 // ****** Declaring Functions *******
@@ -95,13 +96,18 @@ void loop() {
     // turn green off to show button pressed.
     digitalWrite(GREEN_LED, LOW);
 
-    data[0] = lowByte(pot_value); // splitting 16-bit number into 2 8-bit number
-    data[1] = highByte(pot_value);
+    data[0] = get_datalength();
+    data[1] = lowByte(pot_value);  // splitting 16-bit number into 2 8-bit number
+    data[2] = highByte(pot_value);
 
+    count++;
     man.transmitArray(get_datalength(), data);  // transmitting data
+    printf("Count = %d\n", count);
     printf("Data length: %d\n", get_datalength());
-    printf("Data transmitted: %d\n", data[0]);
-    printf("Data transmitted: %d\n", data[1]);
+    for (int i = 0; i < get_datalength(); i++) {
+      printf("Data[i] = %d\n", i);
+    }
+    printf("\n");
 
     // Blink the Blue LED 5 times to indicate data was transmitted
     for (int i = 0; i < 5; i++) {
