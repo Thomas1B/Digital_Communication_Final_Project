@@ -25,12 +25,13 @@
 #define GREEN_LED 4  // GREEN LED for system status
 #define LED_PIN 5    // PWM pin connected to LED (for controlling brightness)
 
-#define BUFFER_SIZE 3
+#define BUFFER_SIZE 4
 uint8_t buffer[BUFFER_SIZE];
 uint8_t Rx_num = 0;
 
 // ******* Declaring Function *******
 void ledController();
+void checksum();
 
 // ******* Setup Function *******
 void setup() {
@@ -56,12 +57,15 @@ void loop() {
     printf("Message #%d:\n", Rx_num);
     digitalWrite(GREEN_LED, LOW);
 
-    man.beginReceiveArray(BUFFER_SIZE, buffer);
+    
     for (int i = 0; i < BUFFER_SIZE; i++) {
       printf("Buffer index: %d -> %u\n", i, buffer[i]);
     }
     printf("end of tranmission.\n");
-    ledController();
+
+   checksum();
+
+    man.beginReceiveArray(BUFFER_SIZE, buffer);
     delay(500);
     digitalWrite(GREEN_LED, HIGH);
   }
@@ -85,8 +89,10 @@ void ledController() {
       2. The low byte is combined with the shifted high byte using
          a bitwise OR operation.
 
-  buffer[0] = low byte
-  buffer[1] = high byte
+  buffer[0] = size/length
+  buffer[1] = low byte
+  buffer[2] = high byte
+  buffer[3] = checksum
 
   This reconstructs the original potentiometer reading so it can be
   used to control the LED brightness.
@@ -95,8 +101,24 @@ void ledController() {
   uint16_t pot_value = buffer[1] | (buffer[2] << 8);         // recombining 2 8-bits bytes
   uint8_t scaledPotValue = map(pot_value, 0, 1023, 0, 255);  // scaling for PWM.
 
+
+
   printf("Pot Value = %d\n", pot_value);  // optional messages
   printf("Scaled Pot Value = %d\n", scaledPotValue);
 
   analogWrite(LED_PIN, scaledPotValue);
+}
+
+void checksum(){
+  uint8_t calculatedChecksum = buffer[0] + buffer[1] + buffer[2];
+
+  printf("Calculated checksum = %u\n", calculatedChecksum);
+  printf("Received checksum   = %u\n", buffer[3]);
+
+  if (buffer[3] == calculatedChecksum){
+    printf("no error\n");
+    ledController();
+  } else {
+    printf("Checksum error - TX ignored\n");
+  }
 }
