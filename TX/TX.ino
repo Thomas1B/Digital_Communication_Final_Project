@@ -43,6 +43,8 @@ unsigned int lastTransmit = 0;  // last time data was transmitted.
 // ****** Declaring Functions *******
 uint8_t get_datalength();
 
+uint8_t get_checkSum();
+
 // ****** Setup Function *******
 void setup() {
   printf("Starting Setup\n");
@@ -87,7 +89,6 @@ void setup() {
 void loop() {
 
   uint16_t pot_value = analogRead(pot);
-
   unsigned int now = millis();
 
   // If button has been pressed AND the allocated time has passed.
@@ -97,15 +98,15 @@ void loop() {
     digitalWrite(GREEN_LED, LOW);
 
     data[0] = get_datalength();
-    data[1] = lowByte(pot_value);  // splitting 16-bit number into 2 8-bit number
-    data[2] = highByte(pot_value);
+    data[1] = map(pot_value, 0, 1023, 0, 255);
+    data[2] = get_checkSum();
 
     count++;
     man.transmitArray(get_datalength(), data);  // transmitting data
     printf("Count = %d\n", count);
     printf("Data length: %d\n", get_datalength());
     for (int i = 0; i < get_datalength(); i++) {
-      printf("Data[i] = %d\n", i);
+      printf("Data[%d] = %d\n", i, data[i]);
     }
     printf("\n");
 
@@ -125,8 +126,15 @@ void loop() {
   }
 }
 
-
 // ****** Declaring Functions *******
 uint8_t get_datalength() {
   return sizeof(data) / sizeof(data[0]);
+}
+
+uint8_t get_checkSum() {
+  uint8_t checkSum = 0;
+  for (int i = 0; i < get_datalength() - 1; i++) {
+    checkSum += data[i];
+  }
+  return checkSum;
 }
