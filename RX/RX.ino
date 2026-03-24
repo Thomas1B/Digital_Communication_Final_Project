@@ -92,13 +92,13 @@ void ledController() {
   buffer[0] = size/length
   buffer[1] = low byte
   buffer[2] = high byte
-  buffer[3] = checksum
+
 
   This reconstructs the original potentiometer reading so it can be
   used to control the LED brightness.
   */
 
-  uint16_t pot_value = buffer[1]; //| (buffer[2] << 8);         // recombining 2 8-bits bytes
+  uint8_t pot_value = buffer[1]; //| (buffer[2] << 8);         // recombining 2 8-bits bytes
   //uint8_t scaledPotValue = map(pot_value, 0, 1023, 0, 255);  // scaling for PWM.
 
 
