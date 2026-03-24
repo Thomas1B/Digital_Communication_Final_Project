@@ -25,7 +25,7 @@
 #define GREEN_LED 4  // GREEN LED for system status
 #define LED_PIN 5    // PWM pin connected to LED (for controlling brightness)
 
-#define BUFFER_SIZE 4
+#define BUFFER_SIZE 3
 uint8_t buffer[BUFFER_SIZE];
 uint8_t Rx_num = 0;
 
@@ -98,24 +98,24 @@ void ledController() {
   used to control the LED brightness.
   */
 
-  uint16_t pot_value = buffer[1] | (buffer[2] << 8);         // recombining 2 8-bits bytes
-  uint8_t scaledPotValue = map(pot_value, 0, 1023, 0, 255);  // scaling for PWM.
+  uint16_t pot_value = buffer[1]; //| (buffer[2] << 8);         // recombining 2 8-bits bytes
+  //uint8_t scaledPotValue = map(pot_value, 0, 1023, 0, 255);  // scaling for PWM.
 
 
 
   printf("Pot Value = %d\n", pot_value);  // optional messages
-  printf("Scaled Pot Value = %d\n", scaledPotValue);
+  printf("Scaled Pot Value = %d\n", pot_value);
 
-  analogWrite(LED_PIN, scaledPotValue);
+  analogWrite(LED_PIN, pot_value);
 }
 
 void checksum(){
-  uint8_t calculatedChecksum = buffer[0] + buffer[1] + buffer[2];
+  uint8_t calculatedChecksum = buffer[0] + buffer[1] ;
 
   printf("Calculated checksum = %u\n", calculatedChecksum);
   printf("Received checksum   = %u\n", buffer[3]);
 
-  if (buffer[3] == calculatedChecksum){
+  if (buffer[2] == calculatedChecksum){
     printf("no error\n");
     ledController();
   } else {
