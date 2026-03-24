@@ -113,7 +113,7 @@ void checksum(){
   uint8_t calculatedChecksum = buffer[0] + buffer[1] ;
 
   printf("Calculated checksum = %u\n", calculatedChecksum);
-  printf("Received checksum   = %u\n", buffer[3]);
+  printf("Received checksum   = %u\n", buffer[2]);
 
   if (buffer[2] == calculatedChecksum){
     printf("no error\n");
