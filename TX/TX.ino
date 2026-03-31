@@ -33,12 +33,11 @@ adjusts an led's brightness accordingly.
 #define button 3     // Pin where the active-HIGH pushbutton is connected
 #define pot A7       // Pin where potentiometer is connected.
 
-#define datalength 7    // Size of the data array being transmitted
 #define delayTime 2000  // delay time (milliseconds) between transmissions, stops spamming of messages.
 int count = 0;
 
-uint8_t data[3] = { 0, 0, 0 };  // Data array that will be transmitted over RF
-unsigned int lastTransmit = 0;  // last time data was transmitted.
+uint8_t data[3] = { 0, 0, 0 };   // Data array that will be transmitted over RF
+unsigned long lastTransmit = 0;  // last time data was transmitted.
 
 // ****** Declaring Functions *******
 uint8_t get_datalength();
@@ -89,7 +88,7 @@ void setup() {
 void loop() {
 
   uint16_t pot_value = analogRead(pot);
-  unsigned int now = millis();
+  unsigned long now = millis();
 
   // If button has been pressed AND the allocated time has passed.
   // This is to stop spamming of button presses.
