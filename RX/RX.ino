@@ -29,6 +29,9 @@
 uint8_t buffer[BUFFER_SIZE];
 uint8_t Rx_num = 0;
 
+uint16_t error_count = 0;
+uint16_t success_count = 0;
+
 // ******* Declaring Function *******
 void ledController();
 void checksum();
@@ -53,17 +56,17 @@ void setup() {
 void loop() {
   if (man.receiveComplete()) {
     Rx_num++;
-    printf("Tranmisson Received!\n");
+    printf("\nTranmisson Received!\n");
     printf("Message #%d:\n", Rx_num);
     digitalWrite(GREEN_LED, LOW);
 
-    
-    for (int i = 0; i < BUFFER_SIZE; i++) {
-      printf("Buffer index: %d -> %u\n", i, buffer[i]);
-    }
-    printf("end of tranmission.\n");
 
-   checksum();
+    // for (int i = 0; i < BUFFER_SIZE; i++) {
+    //   printf("Buffer index: %d -> %u\n", i, buffer[i]);
+    // }
+    // printf("end of tranmission.\n");
+
+    checksum();
 
     man.beginReceiveArray(BUFFER_SIZE, buffer);
     delay(500);
@@ -98,27 +101,31 @@ void ledController() {
   used to control the LED brightness.
   */
 
-  uint8_t pot_value = buffer[1]; //| (buffer[2] << 8);         // recombining 2 8-bits bytes
+  uint8_t pot_value = buffer[1];  //| (buffer[2] << 8);         // recombining 2 8-bits bytes
   //uint8_t scaledPotValue = map(pot_value, 0, 1023, 0, 255);  // scaling for PWM.
 
 
 
-  printf("Pot Value = %d\n", pot_value);  // optional messages
-  printf("Scaled Pot Value = %d\n", pot_value);
+  // printf("Pot Value = %d\n", pot_value);  // optional messages
+  // printf("Scaled Pot Value = %d\n", pot_value);
 
   analogWrite(LED_PIN, pot_value);
 }
 
-void checksum(){
-  uint8_t calculatedChecksum = buffer[0] + buffer[1] ;
+void checksum() {
+  uint8_t calculatedChecksum = buffer[0] + buffer[1];
 
-  printf("Calculated checksum = %u\n", calculatedChecksum);
-  printf("Received checksum   = %u\n", buffer[2]);
+  //printf("Calculated checksum = %u\n", calculatedChecksum);
+  //printf("Received checksum   = %u\n", buffer[2]);
 
-  if (buffer[2] == calculatedChecksum){
-    printf("no error\n");
+  if (buffer[2] == calculatedChecksum) {
+    //printf("no error\n");
+    success_count++;
     ledController();
   } else {
-    printf("Checksum error - TX ignored\n");
+    // printf("Checksum error - TX ignored\n");
+    error_count++;
   }
+  printf("Success Count: %d\n", success_count);
+  printf("Error Count: %d\n", error_count);
 }

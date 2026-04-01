@@ -92,7 +92,8 @@ void loop() {
 
   // If button has been pressed AND the allocated time has passed.
   // This is to stop spamming of button presses.
-  if (digitalRead(button) && now - lastTransmit >= delayTime) {
+  // if (digitalRead(button) && now - lastTransmit >= delayTime) {
+  if (now - lastTransmit >= delayTime) {  // auto repeating
     // turn green off to show button pressed.
     digitalWrite(GREEN_LED, LOW);
 
