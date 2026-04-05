@@ -34,7 +34,7 @@ adjusts an led's brightness accordingly.
 #define pot A7       // Pin where potentiometer is connected.
 
 #define delayTime 2000  // delay time (milliseconds) between transmissions, stops spamming of messages.
-int count = 0;
+uint16_t transmitted_count = 0;
 
 uint8_t data[3] = { 0, 0, 0 };   // Data array that will be transmitted over RF
 unsigned long lastTransmit = 0;  // last time data was transmitted.
@@ -92,8 +92,7 @@ void loop() {
 
   // If button has been pressed AND the allocated time has passed.
   // This is to stop spamming of button presses.
-  // if (digitalRead(button) && now - lastTransmit >= delayTime) {
-  if (now - lastTransmit >= delayTime) {  // auto repeating
+  if (digitalRead(button) && now - lastTransmit >= delayTime) {
     // turn green off to show button pressed.
     digitalWrite(GREEN_LED, LOW);
 
@@ -101,11 +100,11 @@ void loop() {
     data[1] = map(pot_value, 0, 1023, 0, 255);
     data[2] = get_checkSum();
 
-    count++;
+    transmitted_count++;
     man.transmitArray(get_datalength(), data);  // transmitting data
-    printf("Count = %d\n", count);
+    printf("transmitted_count = %d\n", transmitted_count);
     printf("Data length: %d\n", get_datalength());
-    for (int i = 0; i < get_datalength(); i++) {
+    for (int i = 0; i < get_datalength()-1; i++) {
       printf("Data[%d] = %d\n", i, data[i]);
     }
     printf("\n");
