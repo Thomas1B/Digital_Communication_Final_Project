@@ -27,8 +27,8 @@
 
 #define BUFFER_SIZE 3
 uint8_t buffer[BUFFER_SIZE];
-uint8_t Rx_num = 0;
 
+uint16_t Rx_num = 0;
 uint16_t error_count = 0;
 uint16_t success_count = 0;
 
@@ -61,10 +61,10 @@ void loop() {
     digitalWrite(GREEN_LED, LOW);
 
 
-    // for (int i = 0; i < BUFFER_SIZE; i++) {
-    //   printf("Buffer index: %d -> %u\n", i, buffer[i]);
-    // }
-    // printf("end of tranmission.\n");
+    for (int i = 0; i < BUFFER_SIZE; i++) {
+      printf("Buffer[%d] = %u\n", i, buffer[i]);
+    }
+    printf("end of message.\n");
 
     checksum();
 
@@ -76,54 +76,24 @@ void loop() {
 
 // ******* Defining Functions *******
 void ledController() {
-  /*
-  This function reconstructs the original 16-bit potentiometer value
-  that was transmitted as two 8-bit bytes, and controls an leds bright accordingly.
-
-  During transmission the 16-bit pot value was split into two parts:
-      data[0] → low byte  (bits 0–7)
-      data[1] → high byte (bits 8–15)
-
-  These bytes were sent over RF and stored in the receiver buffer.
-
-  To rebuild the original number:
-      1. The high byte is shifted left by 8 bits to move it back into
-         the upper half of the 16-bit value.
-      2. The low byte is combined with the shifted high byte using
-         a bitwise OR operation.
-
-  buffer[0] = size/length
-  buffer[1] = low byte
-  buffer[2] = high byte
-
-
-  This reconstructs the original potentiometer reading so it can be
-  used to control the LED brightness.
-  */
-
-  uint8_t pot_value = buffer[1];  //| (buffer[2] << 8);         // recombining 2 8-bits bytes
-  //uint8_t scaledPotValue = map(pot_value, 0, 1023, 0, 255);  // scaling for PWM.
-
-
-
-  // printf("Pot Value = %d\n", pot_value);  // optional messages
-  // printf("Scaled Pot Value = %d\n", pot_value);
-
+  // simple function to turn on led.
+  uint8_t pot_value = buffer[1];
   analogWrite(LED_PIN, pot_value);
 }
 
 void checksum() {
-  uint8_t calculatedChecksum = buffer[0] + buffer[1];
+  uint8_t calculatedChecksum = 0;
+  for (int i = 0; i < BUFFER_SIZE - 1; i++) {
+    calculatedChecksum += buffer[i];
+  }
 
-  //printf("Calculated checksum = %u\n", calculatedChecksum);
-  //printf("Received checksum   = %u\n", buffer[2]);
+  printf("Cal. checksum = %u\n", calculatedChecksum);
+  printf("Rec. checksum = %u\n", buffer[BUFFER_SIZE - 1]);
 
   if (buffer[2] == calculatedChecksum) {
-    //printf("no error\n");
     success_count++;
     ledController();
   } else {
-    // printf("Checksum error - TX ignored\n");
     error_count++;
   }
   printf("Success Count: %d\n", success_count);
