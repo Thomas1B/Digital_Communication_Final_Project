@@ -87,12 +87,13 @@ void setup() {
 // ****** Main Loop *******
 void loop() {
 
-  uint16_t pot_value = analogRead(pot);
-  unsigned long now = millis();
+  unsigned long now = millis(); // current time
 
   // If button has been pressed AND the allocated time has passed.
   // This is to stop spamming of button presses.
   if (digitalRead(button) && now - lastTransmit >= delayTime) {
+    uint16_t pot_value = analogRead(pot);  // reading pot
+
     // turn green off to show button pressed.
     digitalWrite(GREEN_LED, LOW);
 
@@ -100,11 +101,11 @@ void loop() {
     data[1] = map(pot_value, 0, 1023, 0, 255);
     data[2] = get_checkSum();
 
-    transmitted_count++;
     man.transmitArray(get_datalength(), data);  // transmitting data
+    transmitted_count++;
     printf("transmitted_count = %d\n", transmitted_count);
     printf("Data length: %d\n", get_datalength());
-    for (int i = 0; i < get_datalength()-1; i++) {
+    for (int i = 0; i < get_datalength() - 1; i++) {
       printf("Data[%d] = %d\n", i, data[i]);
     }
     printf("\n");
@@ -120,7 +121,7 @@ void loop() {
   }
 
   // if allocated time has passed, turn green led on to indicate another transmission can be sent.
-  else if (now - lastTransmit >= delayTime) {
+  if (now - lastTransmit >= delayTime) {
     digitalWrite(GREEN_LED, HIGH);
   }
 }
