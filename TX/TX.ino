@@ -97,12 +97,15 @@ void loop() {
     // turn green off to show button pressed.
     digitalWrite(GREEN_LED, LOW);
 
+    // preparing data array for transmission
     data[0] = get_datalength();
     data[1] = map(pot_value, 0, 1023, 0, 255);
     data[2] = get_checkSum();
 
-    man.transmitArray(get_datalength(), data);  // transmitting data
+    // transmitting data
+    man.transmitArray(get_datalength(), data);
     transmitted_count++;
+
     printf("transmitted_count = %d\n", transmitted_count);
     printf("Data length: %d\n", get_datalength());
     for (int i = 0; i < get_datalength() - 1; i++) {
@@ -128,10 +131,22 @@ void loop() {
 
 // ****** Declaring Functions *******
 uint8_t get_datalength() {
+  /*
+  Function to calculate the length of an array.
+  Returns a 8bit number
+
+  -> Works by dividing the data size of the array by the size of a data entry.
+  */
   return sizeof(data) / sizeof(data[0]);
 }
 
 uint8_t get_checkSum() {
+  /*
+  Function to calculate the checksum value for error detection
+  Returns 8bit number
+
+  -> Sums all entries of the array (except for the last entry).
+  */
   uint8_t checkSum = 0;
   for (int i = 0; i < get_datalength() - 1; i++) {
     checkSum += data[i];
