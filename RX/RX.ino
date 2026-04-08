@@ -55,8 +55,8 @@ void setup() {
 // ******* Main Loop *******
 void loop() {
   if (man.receiveComplete()) {  // Check if a transmission has been received
-    digitalWrite(GREEN_LED, LOW);  // Turn off LED to indicate processing
     Rx_num++;
+    digitalWrite(GREEN_LED, LOW);  // Turn off LED to indicate processing
     printf("\nTranmisson Received!\n");
     printf("Message #%d:\n", Rx_num);
 
@@ -66,7 +66,7 @@ void loop() {
     }
     printf("end of message.\n");
 
-    checksum();  // Validate received data using checksum
+    checksum();  // Validate received data using checksum (LED function is called in this function)
 
     man.beginReceiveArray(BUFFER_SIZE, buffer);  // Restart receiver for next message
     delay(250);
@@ -83,7 +83,9 @@ void ledController() {
 
 void checksum() {
   /* 
-    Calculate the check of the data. If used for error detection.
+    Performing error detection using a checksum.
+      If passed -> call LED function.
+      if failed -> ignore and restart loop.
   */
 
   uint8_t calculatedChecksum = 0;
@@ -98,9 +100,11 @@ void checksum() {
 
   // Compare calculated checksum with received checksum
   if (buffer[BUFFER_SIZE - 1] == calculatedChecksum) {
+    // passed
     success_count++;
     ledController();
   } else {
+    // failed
     error_count++;
   }
   printf("Success Count: %d\n", success_count);
