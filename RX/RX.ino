@@ -54,23 +54,23 @@ void setup() {
 
 // ******* Main Loop *******
 void loop() {
-  if (man.receiveComplete()) {
+  if (man.receiveComplete()) {  // Check if a transmission has been received
+    digitalWrite(GREEN_LED, LOW);  // Turn off LED to indicate processing
     Rx_num++;
     printf("\nTranmisson Received!\n");
     printf("Message #%d:\n", Rx_num);
-    digitalWrite(GREEN_LED, LOW);
 
-
+    // Print received buffer contents
     for (int i = 0; i < BUFFER_SIZE; i++) {
       printf("Buffer[%d] = %u\n", i, buffer[i]);
     }
     printf("end of message.\n");
 
-    checksum();
+    checksum();  // Validate received data using checksum
 
-    man.beginReceiveArray(BUFFER_SIZE, buffer);
-    delay(500);
-    digitalWrite(GREEN_LED, HIGH);
+    man.beginReceiveArray(BUFFER_SIZE, buffer);  // Restart receiver for next message
+    delay(250);
+    digitalWrite(GREEN_LED, HIGH);  // Indicate ready for next message
   }
 }
 
@@ -82,7 +82,13 @@ void ledController() {
 }
 
 void checksum() {
+  /* 
+    Calculate the check of the data. If used for error detection.
+  */
+
   uint8_t calculatedChecksum = 0;
+
+  // Sum all bytes except the last (which is the received checksum)
   for (int i = 0; i < BUFFER_SIZE - 1; i++) {
     calculatedChecksum += buffer[i];
   }
@@ -90,7 +96,8 @@ void checksum() {
   printf("Cal. checksum = %u\n", calculatedChecksum);
   printf("Rec. checksum = %u\n", buffer[BUFFER_SIZE - 1]);
 
-  if (buffer[2] == calculatedChecksum) {
+  // Compare calculated checksum with received checksum
+  if (buffer[BUFFER_SIZE - 1] == calculatedChecksum) {
     success_count++;
     ledController();
   } else {
